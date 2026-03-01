@@ -1,16 +1,6 @@
 "use client"
 import React, { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-} from "recharts";
+
 
 //sidebar menu
 export function Sidebar({ open, onClose }) {
