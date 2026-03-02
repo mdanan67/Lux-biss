@@ -5,11 +5,11 @@ import React, { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Home", href: "#home" },
+  { label: "Home", href: "/" },
   { label: "Products", href: "#products" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Earnings", href: "#earnings" },
-  { label: "About Us", href: "#about" },
+  { label: "About Us", href: "/about" },
 ];
 
 export default function Navbar() {
