@@ -3,50 +3,26 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { api } from "@/lib/api";
 
-export default function LuxbissForgotPasswordSplit() {
+export default function LuxbissForgotPasswordSplit({ onSubmit }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError("");
-  setSuccess("");
-
-  try {
-    const res = await api.post("/auth/forgot-password", { email });
-
-    // ✅ log correct variable
-    console.log(res.data);
-
-    // ✅ show success message
-    setSuccess(res.data?.message || "Verification code sent successfully!");
-
-    // ✅ store email for OTP page
-    sessionStorage.setItem("resetPasswordEmail", email);
-
-    // ✅ redirect after short delay
-    setTimeout(() => {
-      router.push("/otp-verification");
-      // or pass email as query too:
-      // router.push(`/otp-verification?email=${encodeURIComponent(email)}`);
-    }, 1500);
-  } catch (err) {
-    const msg =
-      err?.response?.data?.message ||
-      (err?.request ? "No response from server. Please check your connection." : "An error occurred. Please try again.");
-
-    setError(msg);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("New Password:", newPassword);
+    console.log("Confirm Password:", confirmPassword);
+    
+    // Check if passwords match
+    if (newPassword !== confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+    
+    onSubmit?.({ newPassword, confirmPassword });
+    // router.push("/otp-verification"); 
+  };
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -66,57 +42,33 @@ const handleSubmit = async (e) => {
 
           <div className="w-full max-w-[380px]">
             <h1 className="text-center text-[22px] font-extrabold text-[#111827]">
-              Forgot Password
+              New Password
             </h1>
             <p className="mt-2 text-center text-[12px] leading-5 text-[#6b7280]">
-              Enter your registered email address below and we&apos;ll send you a
-              verification code to reset your password.
+              Enter your new password below to reset your password.
             </p>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mt-4 rounded-lg bg-red-50 p-3 text-[12px] text-red-600 border border-red-200">
-                {error}
-              </div>
-            )}
-
-            {/* Success Message */}
-            {success && (
-              <div className="mt-4 rounded-lg bg-green-50 p-3 text-[12px] text-green-600 border border-green-200">
-                {success}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <Field
-                label="Email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={setEmail}
-                type="email"
-                disabled={isLoading}
+                label="New password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={setNewPassword}
+                type="password" // Changed from "number" to "password"
+              />
+              <Field
+                label="Confirm password"
+                placeholder="Enter confirm password"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                type="password" // Changed from "number" to "password"
               />
 
               <button
                 type="submit"
-                disabled={isLoading}
-                className={`w-full rounded-lg bg-[#1ea7d8] py-2.5 text-[12px] font-semibold text-white transition 
-                  ${isLoading 
-                    ? "opacity-50 cursor-not-allowed" 
-                    : "hover:bg-[#1795c2] active:scale-[0.99]"
-                  }`}
+                className="w-full rounded-lg bg-[#1ea7d8] py-2.5 text-[12px] font-semibold text-white transition hover:bg-[#1795c2] active:scale-[0.99]"
               >
-                {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sending...
-                  </span>
-                ) : (
-                  "Send Verification Code"
-                )}
+                Reset Password
               </button>
             </form>
 
@@ -125,8 +77,7 @@ const handleSubmit = async (e) => {
               <button
                 type="button"
                 onClick={() => router.push("/login")}
-                className="font-semibold text-[#2563eb] hover:underline disabled:opacity-50"
-                disabled={isLoading}
+                className="font-semibold text-[#2563eb] hover:underline"
               >
                 Back now
               </button>
@@ -233,7 +184,7 @@ function LeftShowcase() {
 
 /* ---------------- Field ---------------- */
 
-function Field({ label, placeholder, value, onChange, type, disabled }) {
+function Field({ label, placeholder, value, onChange, type = "text" }) {
   return (
     <div>
       <label className="mb-2 block text-[12px] font-medium text-[#374151]">
@@ -244,10 +195,7 @@ function Field({ label, placeholder, value, onChange, type, disabled }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         type={type}
-        disabled={disabled}
-        className={`h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-[12px] text-[#111827] outline-none placeholder:text-[#b6bfce] 
-          focus:border-[#1ea7d8] focus:ring-4 focus:ring-[#1ea7d8]/15
-          ${disabled ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+        className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-[12px] text-[#111827] outline-none placeholder:text-[#b6bfce] focus:border-[#1ea7d8] focus:ring-4 focus:ring-[#1ea7d8]/15"
       />
     </div>
   );

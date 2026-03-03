@@ -11,12 +11,13 @@ export default function LuxbissLoginSplit({ onGoogle }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-    
+   
       await login(email, password);
 
       router.push("/dashbord");

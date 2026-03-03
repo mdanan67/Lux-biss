@@ -3,39 +3,77 @@ import { api } from "@/lib/api";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GoogleLogin } from "@react-oauth/google";
 
-export default function LuxbissRegisterSplit({ onGoogle, onSubmit }) {
+export default function LuxbissRegisterSplit() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agree, setAgree] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const router = useRouter();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!agree) {
-    alert("Please agree to the Terms & Privacy Policy");
-    return;
-  }
+    if (!agree) {
+      alert("Please agree to the Terms & Privacy Policy");
+      return;
+    }
 
-  try {
-    const res = await api.post("/auth/register", {
-      name: fullName,   
-      email: email,
-      password: password,
-    });
+    try {
+      const res = await api.post("/auth/register", {
+        name: fullName,
+        email: email,
+        password: password,
+      });
 
-    console.log("REGISTER SUCCESS:", res.data);
-    alert("Registration successful!");
+      console.log("REGISTER SUCCESS:", res.data);
+      alert("Registration successful!");
+      router.push("/login");
+    } catch (err) {
+      console.log("REGISTER ERROR:", err?.response?.data || err.message);
+      alert(err?.response?.data?.message || "Registration failed");
+    }
+  };
 
-    router.push("/login");
-  } catch (err) {
-    console.log("REGISTER ERROR:", err?.response?.data || err.message);
-    alert(err?.response?.data?.message || "Registration failed");
-  }
-};
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!agree) {
+      alert("Please agree to the Terms & Privacy Policy");
+      return;
+    }
+
+    const token = credentialResponse?.credential; 
+      console.log(token);
+
+    if (!token) {
+      alert("Google sign-in failed (no token received).");
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      // Send token to your backend (axios via api instance)
+      const res = await api.post("/auth/google", { token });
+
+      console.log("GOOGLE AUTH SUCCESS:", res.data);
+      alert("Google sign-in successful!");
+
+      // If your backend returns a token and you store it, do it here:
+      // localStorage.setItem("token", res.data.token);
+
+      // Redirect where you want after Google auth:
+      router.push("/");
+      // or router.push("/login");
+    } catch (err) {
+      console.log("GOOGLE AUTH ERROR:", err?.response?.data || err.message);
+      alert(err?.response?.data?.message || "Google sign-in failed");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -64,15 +102,31 @@ const handleSubmit = async (e) => {
               Register now and start your adventure.
             </p>
 
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={onGoogle}
-              className="mx-auto mt-7 flex w-full max-w-[380px] items-center justify-center gap-2 rounded-xl border border-[#cfd6e6] bg-white py-2.5 text-[13px] font-medium text-[#111827] shadow-sm hover:bg-[#f7f9ff]"
-            >
-              <GoogleG />
-              Register with Google
-            </button>
+            {/* Google button (keeps your UI, triggers real Google login) */}
+            <div className="mx-auto mt-7 w-full max-w-[380px]">
+              <div className="relative">
+                <button
+                  type="button"
+                  disabled={googleLoading}
+                  className={[
+                    "flex w-full items-center justify-center gap-2 rounded-xl border border-[#cfd6e6] bg-white py-2.5 text-[13px] font-medium text-[#111827] shadow-sm hover:bg-[#f7f9ff]",
+                    googleLoading ? "opacity-60 cursor-not-allowed" : "",
+                  ].join(" ")}
+                >
+                  <GoogleG />
+                  {googleLoading ? "Connecting..." : "Register with Google"}
+                </button>
+
+                {/* Invisible overlay: the actual GoogleLogin button */}
+                <div className="absolute inset-0 opacity-0">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => alert("Google sign-in failed")}
+                    useOneTap={false}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Divider */}
             <div className="mx-auto my-8 flex w-full max-w-[520px] items-center gap-4">
@@ -82,7 +136,10 @@ const handleSubmit = async (e) => {
             </div>
 
             {/* Inputs */}
-            <form onSubmit={handleSubmit} className="mx-auto max-w-[520px] space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="mx-auto max-w-[520px] space-y-5"
+            >
               <Field
                 label="Full Name"
                 placeholder="Enter your name"
@@ -193,7 +250,10 @@ function LeftShowcase() {
               </h3>
               <p className="mt-1 text-[12px] text-[#64748b]">This Quarter</p>
             </div>
-            <button type="button" className="rounded-md p-1.5 hover:bg-slate-100">
+            <button
+              type="button"
+              className="rounded-md p-1.5 hover:bg-slate-100"
+            >
               <DotsIcon />
             </button>
           </div>

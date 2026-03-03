@@ -2,12 +2,14 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 export default function LuxbissVerifyCodeSplit({
   onSubmit,
   length = 4,
   initialValue = "", // optional like "852"
 }) {
+  const router = useRouter();
   const [digits, setDigits] = useState(() => {
     const arr = Array.from({ length }, () => "");
     const seed = String(initialValue || "").slice(0, length).split("");
@@ -91,7 +93,12 @@ export default function LuxbissVerifyCodeSplit({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isComplete) return;
+    
+    // Call onSubmit if provided
     onSubmit?.({ code });
+    
+    // Navigate to next page (usually reset password success or home)
+    router.push("/new-password"); // or "/dashboard" or wherever you want
   };
 
   return (
@@ -156,7 +163,7 @@ export default function LuxbissVerifyCodeSplit({
                 className={[
                   "mx-auto mt-6 block w-full max-w-[340px] rounded-lg py-2.5 text-[12px] font-semibold text-white transition",
                   isComplete
-                    ? "bg-[#1ea7d8] hover:bg-[#1795c2] active:scale-[0.99]"
+                    ? "bg-[#1ea7d8] hover:bg-[#1795c2] active:scale-[0.99] cursor-pointer"
                     : "cursor-not-allowed bg-[#8fd3ea]",
                 ].join(" ")}
               >
@@ -165,8 +172,23 @@ export default function LuxbissVerifyCodeSplit({
             </form>
 
             <p className="mt-6 text-center text-[12px] text-[#6b7280]">
+              Didn't receive the code?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  // Add resend logic here
+                  console.log("Resend code");
+                  alert("New code sent!");
+                }}
+                className="font-semibold text-[#1ea7d8] underline hover:no-underline"
+              >
+                Resend
+              </button>
+            </p>
+
+            <p className="mt-4 text-center text-[12px] text-[#6b7280]">
               Already have an account?{" "}
-              <Link href="/login" className="font-semibold text-[#1ea7d8] underline">
+              <Link href="/login" className="font-semibold text-[#1ea7d8] underline hover:no-underline">
                 Log in
               </Link>
             </p>
